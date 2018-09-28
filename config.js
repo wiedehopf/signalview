@@ -61,8 +61,9 @@ ColorByAlt = {
                 // hue of the first entry; altitudes above
                 // the last entry use the hue of the last
                 // entry.
-                h: [ { alt: -36,  val: 0 },    // orange
-                     { alt: 0, val: 360 } ], // magenta
+                h: [ { alt: -36,  val: 20 },    // orange
+		     { alt: -32,  val: 30 },
+                     { alt: -1, val: 380 } ], // magenta
                 s: 87,
                 l: 43,
         },
