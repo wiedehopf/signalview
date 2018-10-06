@@ -248,7 +248,7 @@ PlaneObject.prototype.updateTrack = function(receiver_timestamp, last_timestamp)
         
         var since_update = this.last_position_time - this.tail_update;
         if ( (lastseg.ground && this.altitude !== "ground") ||
-             (!lastseg.ground && this.altitude === "ground") || Math.abs(this.rssi - lastseg.altitude) > 1.5 ) {
+             (!lastseg.ground && this.altitude === "ground") || Math.abs(this.rssi - lastseg.altitude) > 1 || this.rssi >-3.5) {
                 //console.log(this.icao + " ground state changed");
                 // Create a new segment as the ground state or the altitude changed.
                 // The new state is only drawn after the state has changed
@@ -544,6 +544,8 @@ PlaneObject.prototype.updateData = function(receiver_timestamp, data) {
                         }
                 }
         }
+//	if (this.sitedist)
+//		this.rssi = 5+1.2*(this.rssi + 20*Math.log10(this.sitedist/100000));
 
         // Pick an altitude
         if ('alt_baro' in data) {
