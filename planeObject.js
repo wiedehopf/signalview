@@ -50,6 +50,9 @@ function PlaneObject(icao) {
 
 	// Data packet numbers
 	this.messages  = null;
+	this.mess = null;
+	this.mess_index = 0;
+	this.total_messages  = 0;
         this.rssi      = null;
 	this.rssa      = null;
 	this.rindex    = 0;
@@ -488,7 +491,11 @@ PlaneObject.prototype.updateIcon = function() {
 // Update our data
 PlaneObject.prototype.updateData = function(receiver_timestamp, data) {
 	// Update all of our data
-	this.messages	= data.messages;
+	if (!this.mess)
+		this.mess = [0,0,0,0];
+	this.mess[this.mess_index++%4] = data.messages - this.total_messages;
+	this.messages = (this.mess[0]+this.mess[1]+this.mess[2]+this.mess[3])>>2;
+	this.total_messages = data.messages;
 	if (!this.rssa)
 		this.rssa = [data.rssi,data.rssi,data.rssi,data.rssi];
 	this.rssa[this.rindex++%4] = data.rssi;

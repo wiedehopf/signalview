@@ -63,11 +63,11 @@ ColorByAlt = {
                 // entry.
                 h: [ { alt: -36,  val: 20 },    // orange
 		     { alt: -32,  val: 30 },
-		     { alt: -2.1,  val: 300 },
+		     { alt: -2.1,  val: 290 },
 		     { alt: -2,  val: 340 },
                      { alt: 0, val: 400 } ],
-                s: 87,
-                l: 43,
+                s: 90,
+                l: 42.5,
         },
 
         // Changes added to the color of the currently selected plane
