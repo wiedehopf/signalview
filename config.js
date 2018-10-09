@@ -61,9 +61,16 @@ ColorByAlt = {
                 // hue of the first entry; altitudes above
                 // the last entry use the hue of the last
                 // entry.
-                h: [ { alt: -36,  val: 20 },    // orange
+                h: [ { alt: -36,  val: 26 },    // orange
 		     { alt: -32,  val: 30 },
-		     { alt: -2.1,  val: 290 },
+		     { alt: -28,  val: 50 },
+		     { alt: -26,  val: 65 },
+		     { alt: -24,  val: 90 },
+		     { alt: -20,  val: 150 },
+		     { alt: -12,  val: 200 },
+		     { alt: -8,  val: 230 },
+		     { alt: -6,  val: 260 },
+		     { alt: -2.1,  val: 300 },
 		     { alt: -2,  val: 340 },
                      { alt: 0, val: 400 } ],
                 s: 90,
