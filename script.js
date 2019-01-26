@@ -16,6 +16,9 @@ var HighlightedPlane = null;
 var FollowSelected = false;
 var infoBoxOriginalPosition = {};
 var customAltitudeColors = true;
+var loadtime = "loadtime";
+var HistoryChunks = false;
+var chunksize = 20;
 
 var SpecialSquawks = {
         '7500' : { cssClass: 'squawk7500', markerColor: 'rgb(255, 85, 85)', text: 'Aircraft Hijacking' },
@@ -197,6 +200,16 @@ function initialize() {
         PlaneRowTemplate = document.getElementById("plane_row_template");
 
         refreshClock();
+
+        $.ajax({
+                url:'data/chunk_0.gz',
+                type:'HEAD',
+                timeout: 3000,
+                success: function()
+                {
+                    HistoryChunks = true;
+                }
+        });
 
         $("#loader").removeClass("hidden");
 
@@ -385,11 +398,22 @@ var PositionHistoryBuffer = [];
 var HistoryItemsReturned = 0;
 function start_load_history() {
 	if (PositionHistorySize > 0 && window.location.hash != '#nohistory') {
-		$("#loader_progress").attr('max',PositionHistorySize);
-		console.log("Starting to load history (" + PositionHistorySize + " items)");
-		//Load history items in parallel
-		for (var i = 0; i < PositionHistorySize; i++) {
-			load_history_item(i);
+		if (HistoryChunks) {
+			PositionHistorySize = Math.ceil(PositionHistorySize/chunksize);
+			$("#loader_progress").attr('max',PositionHistorySize);
+			console.log("Starting to load history (" + PositionHistorySize + " items)");
+			console.time("Downloaded and parsed History");
+			//Load history chunks in parallel
+			for (var i = 0; i < PositionHistorySize; i++) {
+				load_history_chunk(i);
+			}
+		} else {
+			$("#loader_progress").attr('max',PositionHistorySize);
+			console.log("Starting to load history (" + PositionHistorySize + " items)");
+			//Load history items in parallel
+			for (var i = 0; i < PositionHistorySize; i++) {
+				load_history_item(i);
+			}
 		}
 	}
 }
@@ -421,10 +445,50 @@ function load_history_item(i) {
                 });
 }
 
+function load_history_chunk(i) {
+        //console.log("Loading history #" + i);
+        //$("#loader_progress").attr('value',i);
+
+        $.ajax({ url: 'data/chunk_' + i + '.gz',
+                timeout: PositionHistorySize * 1000, // Allow 40 ms load time per history entry
+                //cache: false,
+	})
+
+                .done(function(data) {
+			HistoryItemsReturned++;
+			$("#loader_progress").attr('value',HistoryItemsReturned);
+				
+			//console.time("array_conv");
+			var strings = data.split("dirty_hack\n");
+			// will hopefully bring the sexy back!
+			for (var str in strings) {
+				var json = JSON.parse(strings[str]);
+				//if (!json.aircraft) console.log(str);
+				PositionHistoryBuffer.push(json);
+			}
+			//console.timeEnd("array_conv");
+
+			if (HistoryItemsReturned == PositionHistorySize) {
+				end_load_history();
+			}
+                })
+
+                .fail(function(jqxhr, status, error) {
+					//Doesn't matter if it failed, we'll just be missing a data point
+					console.log(error);
+					HistoryItemsReturned++;
+					if (HistoryItemsReturned == PositionHistorySize) {
+						end_load_history();
+					}
+                });
+}
+
 function end_load_history() {
+	console.timeEnd("Downloaded and parsed History");
+	console.time("Processed Hisory");
         $("#loader").addClass("hidden");
 
-        console.log("Done loading history");
+        //console.log("Done loading history");
 
         if (PositionHistoryBuffer.length > 0) {
                 var now, last=0;
@@ -436,11 +500,12 @@ function end_load_history() {
                 // Process history
                 for (var h = 0; h < PositionHistoryBuffer.length; ++h) {
                         now = PositionHistoryBuffer[h].now;
-                        console.log("Applying history " + (h + 1) + "/" + PositionHistoryBuffer.length + " at: " + now);
+			if (h%100==99)
+				console.log("Applying history " + (h + 1) + "/" + PositionHistoryBuffer.length + " at: " + now);
                         processReceiverUpdate(PositionHistoryBuffer[h]);
 
                         // update track
-                        console.log("Updating tracks at: " + now);
+                        //console.log("Updating tracks at: " + now);
                         for (var i = 0; i < PlanesOrdered.length; ++i) {
                                 var plane = PlanesOrdered[i];
                                 plane.updateTrack(now, last);
@@ -460,6 +525,7 @@ function end_load_history() {
         }
 
         PositionHistoryBuffer = null;
+	console.timeEnd("Processed Hisory");
 
         console.log("Completing init");
 
@@ -1184,8 +1250,6 @@ function refreshHighlighted() {
 	}
 
 	$('#highlighted_speed').text(format_speed_long(highlighted.speed, DisplayUnits));
-	
-	$('#highlighted_rssi').text(highlighted.rssi.toFixed(1) + ' dBFS');
 
 	$("#highlighted_altitude").text(format_altitude_long(highlighted.altitude, highlighted.vert_rate, DisplayUnits));
 
@@ -1574,7 +1638,6 @@ function setColumnVisibility() {
     showColumn(infoTable, "#registration", !mapIsVisible);
     showColumn(infoTable, "#aircraft_type", !mapIsVisible);   
     showColumn(infoTable, "#vert_rate", !mapIsVisible);
-    showColumn(infoTable, "#squawk", !mapIsVisible);
     showColumn(infoTable, "#track", !mapIsVisible);
     showColumn(infoTable, "#lat", !mapIsVisible);
     showColumn(infoTable, "#lon", !mapIsVisible);

@@ -251,7 +251,7 @@ PlaneObject.prototype.updateTrack = function(receiver_timestamp, last_timestamp)
         
         var since_update = this.last_position_time - this.tail_update;
         if ( (lastseg.ground && this.altitude !== "ground") ||
-             (!lastseg.ground && this.altitude === "ground") || Math.abs(this.rssi - lastseg.altitude) > 1 || this.rssi >-3.5) {
+             (!lastseg.ground && this.altitude === "ground") || Math.abs(this.rssi - lastseg.altitude) > 0.4) {
                 //console.log(this.icao + " ground state changed");
                 // Create a new segment as the ground state or the altitude changed.
                 // The new state is only drawn after the state has changed
@@ -494,7 +494,11 @@ PlaneObject.prototype.updateData = function(receiver_timestamp, data) {
 	if (!this.mess)
 		this.mess = [0,0,0,0];
 	this.mess[this.mess_index++%4] = data.messages - this.total_messages;
-	this.messages = (this.mess[0]+this.mess[1]+this.mess[2]+this.mess[3])>>2;
+	this.messages = (this.mess[0]+this.mess[1]+this.mess[2]+this.mess[3]);
+	if (this.messages>20)
+		this.messages = this.messages >> 2;
+	else
+		this.messages = this.messages/4;
 	this.total_messages = data.messages;
 	if (!this.rssa)
 		this.rssa = [data.rssi,data.rssi,data.rssi,data.rssi];
