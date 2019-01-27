@@ -1249,6 +1249,7 @@ function refreshHighlighted() {
 		$('#highlighted_registration').text("n/a");
 	}
 
+        $('#highlighted_rssi').text(highlighted.rssi.toFixed(1) + ' dBFS');
 	$('#highlighted_speed').text(format_speed_long(highlighted.speed, DisplayUnits));
 
 	$("#highlighted_altitude").text(format_altitude_long(highlighted.altitude, highlighted.vert_rate, DisplayUnits));
